@@ -1,28 +1,28 @@
 # LandRegistration
 We have defined 3 organizations Sro, Revenue, Bank for Land registration.
-In Network we will 4 CA images (Sro, Revenue, Bank, orderer), were each Orgizations is having single Peer 
+In Network we will 4 CA images (Sro, Revenue, Bank, orderer), were each Orgizations is having single Peer0
 
 To start the fabric CA admin
-
+```
 docker-compose -f docker/docker-compose-ca.yaml up -d
-
-It will create new organizations folder were we have CA server are built.
-
+```
+It will create new organizations folder were we have CA server are built folder permission is changed
+```
 sudo chmode -R 774  organizations/ 
-
-We have script registerEnroll.sh to egister and enrole the users for each organization.
-
+```
+We have script registerEnroll.sh to register and enrole the users for each organization.
+```
 chmod +x registerEnroll.sh
 
 ./registerEnroll.sh
-
+```
 To Generate the Gensis Block - Looks for Fabric congiuration file that needs to run 
 ```
 export FABRIC_CFG_PATH=${PWD}
 configtxgen -profile ThreeOrgsOrdererGenesis -channelID system-channel -outputBlock ./channel-artifacts/genesis.block
-
+```
 Create channel for transaction is used to define the channel name.
-
+```
 export CHANNEL_NAME=landchannel
 configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx ./channel-artifacts/${CHANNEL_NAME}.tx -channelID $CHANNEL_NAME
 ```    
@@ -117,9 +117,18 @@ On peer0_bank terminal
 peer lifecycle chaincode install fabland.tar.gz
 peer lifecycle chaincode queryinstalled
 ```
-Exporting thr chain code with correct Package ID
+Exporting the chain code with correct Package ID on sro terminal
 ```
 export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
 peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
 ```
-
+Exporting the chain code with correct Package ID on revenue terminal
+```
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+```
+Exporting the chain code with correct Package ID on bank terminal
+```
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+```
