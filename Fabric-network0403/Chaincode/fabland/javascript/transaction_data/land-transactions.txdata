@@ -1,0 +1,58 @@
+[
+    {
+        "transactionName": "landExists",
+        "transactionLabel": "A test landExists transaction",
+        "arguments": [
+            "Land001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "createLand",
+        "transactionLabel": "A test createLand transaction",
+        "arguments": [
+            "Land003",
+            "Ernakulam",
+            "Angamaly",
+            "Aluva",
+            "Manjapra",
+            "004",
+            "111",
+            "1",
+            "0.5",
+            "River",
+            "John Property",
+            "Babu Property",
+            "Johny Property",
+            "Remarks if any",
+            "K A Cherian",
+            "222"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "readLand",
+        "transactionLabel": "A test readLand transaction",
+        "arguments": [
+            "Land003"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "updateLand",
+        "transactionLabel": "A test updateLand transaction",
+        "arguments": [
+            "Land001",
+            "2023/0001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "deleteLand",
+        "transactionLabel": "A test deleteLand transaction",
+        "arguments": [
+            "Land001"
+        ],
+        "transientData": {}
+    }
+]

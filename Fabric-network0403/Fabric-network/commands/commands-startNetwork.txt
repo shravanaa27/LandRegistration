@@ -1,0 +1,241 @@
+/////Open a command terminal with in Fabric-network folder, let's call this terminal as host terminal
+
+############## host terminal ##############
+
+------------Register the ca admin for each organization—----------------
+
+docker-compose -f docker/docker-compose-ca.yaml up -d
+
+sudo chmod -R 777 organizations/
+
+------------Register and enroll the users for each organization—-----------
+
+chmod +x registerEnroll.sh
+
+./registerEnroll.sh
+
+-------------Generate the genesis block—-------------------------------
+
+export FABRIC_CFG_PATH=${PWD}
+
+configtxgen -profile ThreeOrgsOrdererGenesis -channelID system-channel -outputBlock ./channel-artifacts/genesis.block
+
+—--------Create the channel transaction—-----------------
+
+export CHANNEL_NAME=landchannel
+
+configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx ./channel-artifacts/${CHANNEL_NAME}.tx -channelID $CHANNEL_NAME
+
+—-------------Build the infrastructure—-----------------
+
+docker-compose -f docker/docker-compose-3org.yaml up -d
+
+sudo chmod -R 777 ../Chaincode/
+
+#####################################################################################################################################################
+
+/////Open another terminal with in Fabric-network folder, let's call this terminal as peer0_sro terminal.
+
+############## peer0_sro terminal ##############
+
+docker exec -it cli bash
+
+export CHANNEL_NAME=landchannel
+
+—-----------create channel—---------
+
+peer channel create -o orderer.land.com:7050 -c $CHANNEL_NAME -f ./config/$CHANNEL_NAME.tx --tls --cafile $ORDERER_TLS_CA
+
+—---------------Join peer to the channel—-------------
+
+peer channel join -b $CHANNEL_NAME.block
+
+peer channel list
+
+#####################################################################################################################################################
+
+/////Open another terminal with in Fabric-network folder, let's call this terminal as peer0_revenue terminal.
+
+############## peer0_revenue terminal ##############
+
+docker exec -it cli bash
+
+export CHANNEL_NAME=landchannel
+
+export CORE_PEER_LOCALMSPID=revenueMSP
+
+export CORE_PEER_ADDRESS=peer0.revenue.land.com:9051
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/users/Admin@revenue.land.com/msp
+
+export CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/server.crt
+
+export CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/server.key
+
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt
+
+—---------------Join peer to the channel—-------------
+
+peer channel join -b $CHANNEL_NAME.block
+
+peer channel list
+
+#####################################################################################################################################################
+
+/////Open another terminal with in Fabric-network folder, let's call this terminal as peer0_bank terminal.
+
+############## peer0_bank terminal ##############
+
+docker exec -it cli bash
+
+export CHANNEL_NAME=landchannel
+
+export CORE_PEER_LOCALMSPID=bankMSP
+
+export CORE_PEER_ADDRESS=peer0.bank.land.com:8051
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/users/Admin@bank.land.com/msp
+
+export CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/server.crt
+
+export CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/server.key
+
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt
+
+—---------------Join peer to the channel—-------------
+
+peer channel join -b $CHANNEL_NAME.block
+
+peer channel list
+
+—-------------anchor peer update—-----------
+
+#####################################################################################################################################################
+
+############## host terminal ##############
+//error after doing script startNetwork
+
+configtxgen -profile ThreeOrgsChannel -outputAnchorPeersUpdate channel-artifacts/sroMSPanchors.tx -channelID ${CHANNEL_NAME} -asOrg sroMSP
+
+configtxgen -profile ThreeOrgsChannel -outputAnchorPeersUpdate channel-artifacts/revenueMSPanchors.tx -channelID ${CHANNEL_NAME} -asOrg revenueMSP
+
+configtxgen -profile ThreeOrgsChannel -outputAnchorPeersUpdate channel-artifacts/bankMSPanchors.tx -channelID ${CHANNEL_NAME} -asOrg bankMSP
+
+#####################################################################################################################################################
+
+############## peer0_sro terminal ##############
+
+peer channel update -o orderer.land.com:7050 -c ${CHANNEL_NAME} -f ./config/sroMSPanchors.tx --tls --cafile $ORDERER_TLS_CA
+
+#####################################################################################################################################################
+
+############## peer0_revenue terminal ##############
+
+peer channel update -o orderer.land.com:7050 -c ${CHANNEL_NAME} -f ./config/revenueMSPanchors.tx --tls --cafile $ORDERER_TLS_CA
+
+#####################################################################################################################################################
+
+############## peer0_bank terminal ##############
+
+peer channel update -o orderer.land.com:7050 -c ${CHANNEL_NAME} -f ./config/bankMSPanchors.tx --tls --cafile $ORDERER_TLS_CA
+
+—-----------------Chaincode lifecycle—-------------------
+
+#####################################################################################################################################################
+
+############## peer0_sro terminal ##############
+
+peer lifecycle chaincode package fabland.tar.gz --path /opt/gopath/src/github.com/chaincode/fabland/javascript/ --lang node --label fabland_1
+
+peer lifecycle chaincode install fabland.tar.gz
+
+peer lifecycle chaincode queryinstalled
+
+#####################################################################################################################################################
+
+############## peer0_revenue terminal ##############
+
+peer lifecycle chaincode install fabland.tar.gz
+
+peer lifecycle chaincode queryinstalled
+
+#####################################################################################################################################################
+
+#####################################################################################################################################################
+
+############## peer0_bank terminal ##############
+
+peer lifecycle chaincode install fabland.tar.gz
+
+peer lifecycle chaincode queryinstalled
+
+#####################################################################################################################################################
+
+############## peer0_sro terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+#####################################################################################################################################################
+
+############## peer0_revenue terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+#####################################################################################################################################################
+
+#####################################################################################################################################################
+
+############## peer0_bank terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+#####################################################################################################################################################
+
+############## peer0_sro terminal ##############
+
+peer lifecycle chaincode checkcommitreadiness --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1 --output json
+
+peer lifecycle chaincode commit -o orderer.land.com:7050 -C ${CHANNEL_NAME} --name fabland --tls --cafile $ORDERER_TLS_CA  --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt --version 1 --sequence 1
+
+peer lifecycle chaincode querycommitted --channelID ${CHANNEL_NAME} --name fabland
+
+<-------------------->
+peer chaincode invoke -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt  --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt -c '{"function":"createLand", "Args":[   "Land001","Ernakulam","Angamaly","Aluva","Manjapra","001","456","1","0.5","River","John Property","Babu Property","Johny Property","Testing changes","K A Cherian","123","MONGODBID"]}'
+
+peer chaincode invoke -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt  --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt -c '{"function":"createLand", "Args":["Land101","Nalgonda","Katangur","Sss","Edloour","123","456","3","0.5","swathi","vinod","suchi","bhargav","first","shravan b","987654"]}'
+
+
+
+
+//landId, district, subRegistrarOffice, taluk, village, blockNo, resurveyNo,
+        areaAcres, areaCent, eastBoundary, northBoundary, westBoundary, southBoundary, remarks, presentOwner, oldsurveyNo
+
+peer chaincode query -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses $CORE_PEER_ADDRESS --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE -c '{"function":"readLand", "Args":["Land001"]}'
+
+#####################################################################################################################################################
+
+############## peer0_revenue terminal ##############
+
+peer chaincode query -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses $CORE_PEER_ADDRESS --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE -c '{"function":"readLand", "Args":["Land001"]}'
+
+#####################################################################################################################################################
+
+############## host terminal ##############
+
+docker exec -e CORE_PEER_LOCALMSPID=sroMSP -e CHANNEL_NAME=mychannel -e CORE_PEER_ADDRESS=peer0.sro.land.com:7051 -e CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/server.crt -e CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/server.key -e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/users/Admin@sro.land.com/msp -i cli peer chaincode query -o orderer.land.com:7050 -C ${CHANNEL_NAME} -n fabland --tls --cafile $ORDERER_TLS_CA --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt -c '{"function":"readLand", "Args":["Land002"]}'
+
+
+
+
+
+
+

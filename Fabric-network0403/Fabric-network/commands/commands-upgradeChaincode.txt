@@ -1,0 +1,44 @@
+/// Make necessary changes in the fabland chaincode.
+///sequence same as fabland_number
+############## peer0_sro terminal ##############
+
+peer lifecycle chaincode package fabland.tar.gz --path /opt/gopath/src/github.com/chaincode/fabland/javascript/ --lang node --label fabland_3
+
+peer lifecycle chaincode install fabland.tar.gz
+
+############## peer0_revenue terminal ##############
+
+peer lifecycle chaincode install fabland.tar.gz
+
+
+############## peer0_bank terminal ##############
+
+peer lifecycle chaincode install fabland.tar.gz
+
+############## peer0_sro terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_3:bc2bf6f4b97179c11f093bf6b74fdd85701a57ac3a822e9202f4a1c401f0ea35
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 2 --sequence 2  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+
+############## peer0_bank terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_3:bc2bf6f4b97179c11f093bf6b74fdd85701a57ac3a822e9202f4a1c401f0ea35
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 2 --sequence 2  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+############## peer0_revenue terminal ##############
+
+///Execute the following command with the correct Package ID
+export PACKAGE_ID=fabland_3:bc2bf6f4b97179c11f093bf6b74fdd85701a57ac3a822e9202f4a1c401f0ea35
+
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 2 --sequence 2  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+
+peer lifecycle chaincode commit -o orderer.land.com:7050 -C ${CHANNEL_NAME} --name fabland --tls --cafile $ORDERER_TLS_CA  --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt --version 2 --sequence 3
+
+// Now the chaincode is ready for invoke and query transactions
+
+
