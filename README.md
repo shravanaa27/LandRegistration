@@ -120,15 +120,49 @@ peer lifecycle chaincode queryinstalled
 Exporting the chain code with correct Package ID on sro terminal
 ```
 export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
 peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
 ```
 Exporting the chain code with correct Package ID on revenue terminal
 ```
 export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
 peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
 ```
 Exporting the chain code with correct Package ID on bank terminal
 ```
 export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+
 peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
 ```
+To check the chaincode is approve on all the orginzaions run below command in **sro** terminal it will give a JSON format of output of **TRUE** 
+```
+peer lifecycle chaincode checkcommitreadiness --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1 --output json
+
+peer lifecycle chaincode commit -o orderer.land.com:7050 -C ${CHANNEL_NAME} --name fabland --tls --cafile $ORDERER_TLS_CA  --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt --version 1 --sequence 1
+
+peer lifecycle chaincode querycommitted --channelID ${CHANNEL_NAME} --name fabland
+```
+
+To invoke the date into Block chain
+```
+peer chaincode invoke -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt  --peerAddresses peer0.revenue.land.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/revenue.land.com/peers/peer0.revenue.land.com/tls/ca.crt --peerAddresses peer0.bank.land.com:8051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/bank.land.com/peers/peer0.bank.land.com/tls/ca.crt -c '{"function":"createLand", "Args":[   "Land101","Ernakulam","Angamaly","Aluva","Manjapra","001","456","1","0.5","River","John Property","Babu Property","Johny Property","Testing changes","K A Cherian","123","MONGODBID"]}'
+```
+To query the date on peers
+```
+peer chaincode query -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses $CORE_PEER_ADDRESS --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE -c '{"function":"readLand", "Args":["Land101"]}'
+```
+To query the Historical date on peers
+```
+peer chaincode query -o orderer.land.com:7050  --tls --cafile $ORDERER_TLS_CA --channelID ${CHANNEL_NAME} --name fabland --peerAddresses $CORE_PEER_ADDRESS --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE -c '{"function":"GetAssetHistory", "Args":["Land101"]}'
+```
+
+To Query the date on the host terminal
+```
+docker exec -e CORE_PEER_LOCALMSPID=sroMSP -e CHANNEL_NAME=mychannel -e CORE_PEER_ADDRESS=peer0.sro.land.com:7051 -e CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/server.crt -e CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/server.key -e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/users/Admin@sro.land.com/msp -i cli peer chaincode query -o orderer.land.com:7050 -C ${CHANNEL_NAME} -n fabland --tls --cafile $ORDERER_TLS_CA --peerAddresses peer0.sro.land.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/organizations/peerOrganizations/sro.land.com/peers/peer0.sro.land.com/tls/ca.crt -c '{"function":"readLand", "Args":["Land101"]}'
+```
+
+
+
+
+
