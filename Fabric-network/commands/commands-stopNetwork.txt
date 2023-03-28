@@ -1,0 +1,28 @@
+############## host terminal ##############
+
+docker-compose -f docker/docker-compose-2org.yaml down
+
+docker-compose -f docker/docker-compose-ca.yaml down
+
+docker rm -f $(docker ps -a | awk '($2 ~ /dev-peer.*/) {print $1}')
+
+docker volume prune
+
+sudo rm -rf organizations/
+
+sudo rm -rf channel-artifacts/
+
+docker ps -a
+
+// if there still exists the containers then execute the following commands.
+
+docker rm $(docker container ls -q) --force
+
+docker container prune
+
+docker system prune
+
+docker volume prune
+
+docker network prune
+
