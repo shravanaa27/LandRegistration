@@ -98,7 +98,7 @@ On peer0_bank terminal
 ```
 peer channel update -o orderer.land.com:7050 -c ${CHANNEL_NAME} -f ./config/bankMSPanchors.tx --tls --cafile $ORDERER_TLS_CA
 ```
-** Chaincode lifecycle **
+**Chaincode lifecycle**
 
 On peer0_sro terminal
 ```
@@ -106,9 +106,20 @@ peer lifecycle chaincode package fabland.tar.gz --path /opt/gopath/src/github.co
 peer lifecycle chaincode install fabland.tar.gz
 peer lifecycle chaincode queryinstalled
 ```
+On peer0_revenue terminal
+```
+peer lifecycle chaincode install fabland.tar.gz
+peer lifecycle chaincode queryinstalled
+```
 
-
-
-
-
+On peer0_bank terminal
+```
+peer lifecycle chaincode install fabland.tar.gz
+peer lifecycle chaincode queryinstalled
+```
+Exporting thr chain code with correct Package ID
+```
+export PACKAGE_ID=fabland_1:c7f8e485834768e9d5a20386f5cde65cde7a48979c0806509ee66e1d155d395a
+peer lifecycle chaincode approveformyorg --channelID ${CHANNEL_NAME} --name fabland --version 1 --sequence 1  --package-id $PACKAGE_ID  --tls --cafile $ORDERER_TLS_CA  --waitForEvent
+```
 
