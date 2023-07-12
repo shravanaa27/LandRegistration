@@ -8,7 +8,7 @@ docker-compose -f docker/docker-compose-ca.yaml up -d
 ```
 It will create new organizations folder were we have CA server are built folder permission is changed
 ```
-sudo chmode -R 774  organizations/ 
+sudo chmod -R 774  organizations/ 
 ```
 We have script registerEnroll.sh to register and enrole the users for each organization.
 ```
@@ -80,7 +80,7 @@ To Join the peer in channel
 peer channel join -b $CHANNEL_NAME.block
 peer channel list
 ```
-Anchor Peer Update
+Anchor Peer Update do it on host Terminal
 ```
 configtxgen -profile ThreeOrgsChannel -outputAnchorPeersUpdate channel-artifacts/sroMSPanchors.tx -channelID ${CHANNEL_NAME} -asOrg sroMSP
 configtxgen -profile ThreeOrgsChannel -outputAnchorPeersUpdate channel-artifacts/revenueMSPanchors.tx -channelID ${CHANNEL_NAME} -asOrg revenueMSP
